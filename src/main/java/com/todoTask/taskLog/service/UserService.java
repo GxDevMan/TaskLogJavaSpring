@@ -7,4 +7,5 @@ public interface UserService {
     User newUser(User newUser);
     User updateUser(User existingUser);
     boolean deleteUser(String UserName);
+    boolean verifyUser(String Password, String UserName);
 }

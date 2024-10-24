@@ -1,5 +1,4 @@
 package com.todoTask.taskLog.entity;
-
 import jakarta.persistence.*;
 
 @Entity
@@ -7,39 +6,42 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long User_Id;
+    private Long userId;
 
-    @Column(columnDefinition = "TXT", nullable = false, unique = true)
-    private String User_Name;
+    @Column(columnDefinition = "TEXT", nullable = false, unique = true)
+    private String userName;
 
-    @Column(columnDefinition = "TXT", nullable = false)
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String Password;
-    private String UserRole;
+
+    @Column(nullable = false)
+    private String userRole;
+
 
     public User(){
 
     }
 
     public User(Long user_Id, String user_Name, String password) {
-        User_Id = user_Id;
-        User_Name = user_Name;
+        userId = user_Id;
+        userName = user_Name;
         Password = password;
     }
 
-    public Long getUser_Id() {
-        return User_Id;
+    public Long getUserId() {
+        return userId;
     }
 
-    public void setUser_Id(Long user_Id) {
-        User_Id = user_Id;
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
-    public String getUser_Name() {
-        return User_Name;
+    public String getUserName() {
+        return userName;
     }
 
-    public void setUser_Name(String user_Name) {
-        User_Name = user_Name;
+    public void setUserName(String userName) {
+        this.userName = userName;
     }
 
     public String getPassword() {
@@ -48,5 +50,13 @@ public class User {
 
     public void setPassword(String password) {
         Password = password;
+    }
+
+    public String getUserRole() {
+        return userRole;
+    }
+
+    public void setUserRole(String userRole) {
+        this.userRole = userRole;
     }
 }
