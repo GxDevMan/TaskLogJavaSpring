@@ -1,5 +1,5 @@
 package com.todoTask.taskLog.controller;
-import com.todoTask.taskLog.entity.User;
+import com.todoTask.taskLog.entity.UserAccount;
 import com.todoTask.taskLog.exception.UserNotFoundException;
 import com.todoTask.taskLog.service.UserService; import org.springframework.beans.factory.annotation.Autowired;
 
@@ -10,7 +10,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 
 @RestController
-@RequestMapping(path = "TaskAPI/v1/User/")
+@RequestMapping(path = "TaskAPI/v1/UserAccount/")
 public class userController {
 
     private final UserService userService;
@@ -21,29 +21,36 @@ public class userController {
     }
 
     @GetMapping
-    @RequestMapping("userNameFind/{user_name}")
-    public ResponseEntity<User> getUserbyUserName(@PathVariable("user_name") String user_name){
+    @RequestMapping("userNameFindAcc/{user_name}/")
+    public ResponseEntity<UserAccount> getUserbyUserName(@PathVariable("user_name") String user_name){
         try{
-            return new ResponseEntity<User>(userService.findUserbyUserName(user_name), HttpStatus.OK);
+            return new ResponseEntity<UserAccount>(userService.findUserbyUserName(user_name), HttpStatus.OK);
              } catch(UserNotFoundException userNotFoundException) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User was not found");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "UserAccount was not found");
         }
     }
 
     @PostMapping
-    @RequestMapping("newUser/")
-    public ResponseEntity<User> postNewUser(@RequestBody User newUser){
-        return new ResponseEntity<User>(userService.newUser(newUser), HttpStatus.OK);
+    @RequestMapping("newUserAcc/")
+    public ResponseEntity<UserAccount> postNewUser(@RequestBody UserAccount newUserAccount){
+        return new ResponseEntity<UserAccount>(userService.newUser(newUserAccount), HttpStatus.OK);
     }
 
+    @PostMapping
+    @RequestMapping("updateUserAcc/")
+    public ResponseEntity<UserAccount> updateExistingUser(@RequestBody UserAccount existingUserAccount){
+        return new ResponseEntity<UserAccount>(userService.updateUser(existingUserAccount), HttpStatus.OK);
+    }
+
+
     @DeleteMapping
-    @RequestMapping("deleteUser/{user_name}")
+    @RequestMapping("deleteUserAcc/{user_name}/")
     public ResponseEntity<?> deleteUser(@PathVariable("user_name") String user_name){
        try {
           userService.deleteUser(user_name);
-          return ResponseEntity.status(HttpStatus.OK).body("User was successfully deleted");
+          return ResponseEntity.status(HttpStatus.OK).body("UserAccount was successfully deleted");
        } catch (UserNotFoundException userNotFoundException) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User was not found");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "UserAccount was not found");
        }
     }
 

@@ -2,27 +2,30 @@ package com.todoTask.taskLog.entity;
 import jakarta.persistence.*;
 
 @Entity
-public class User {
+public class UserAccount {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long userId;
 
-    @Column(columnDefinition = "TEXT", nullable = false, unique = true)
+    @Column(unique = true, nullable = false)
     private String userName;
 
     @Column(columnDefinition = "TEXT", nullable = false)
     private String Password;
 
+    @Column(columnDefinition = "TEXT", nullable = false)
+    private String passwordSalt;
+
     @Column(nullable = false)
     private String userRole;
 
 
-    public User(){
+    public UserAccount(){
 
     }
 
-    public User(Long user_Id, String user_Name, String password) {
+    public UserAccount(Long user_Id, String user_Name, String password) {
         userId = user_Id;
         userName = user_Name;
         Password = password;
@@ -58,5 +61,13 @@ public class User {
 
     public void setUserRole(String userRole) {
         this.userRole = userRole;
+    }
+
+    public String getPasswordSalt() {
+        return passwordSalt;
+    }
+
+    public void setPasswordSalt(String passwordSalt) {
+        this.passwordSalt = passwordSalt;
     }
 }

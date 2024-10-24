@@ -1,14 +1,11 @@
 package com.todoTask.taskLog.service;
 
-import com.todoTask.taskLog.entity.User;
+import com.todoTask.taskLog.entity.UserAccount;
+import com.todoTask.taskLog.exception.BlankPasswordException;
 import com.todoTask.taskLog.exception.UserNotFoundException;
 import com.todoTask.taskLog.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Optional;
 
 @Service
@@ -17,85 +14,70 @@ public class UserServiceImpl implements UserService{
    @Autowired
    private UserRepository userRepository;
 
+   @Autowired
+   private PasswordService passwordService;
+
     @Override
-    public User findUserbyUserName(String userName) {
-        Optional<User> userOptional = Optional.ofNullable(userRepository.findByuserName(userName));
+    public UserAccount findUserbyUserName(String userName) {
+        Optional<UserAccount> userOptional = Optional.ofNullable(userRepository.findByuserName(userName));
 
         if(userOptional.isPresent()){
             return userOptional.get();
         } else {
-            throw new UserNotFoundException("User was not found by use of User Name");
+            throw new UserNotFoundException("UserAccount was not found by use of UserAccount Name");
         }
     }
 
     @Override
-    public User findUserbyId(Long Id) {
-        Optional<User> userOptional = userRepository.findById(Id);
+    public UserAccount findUserbyId(Long Id) {
+        Optional<UserAccount> userOptional = userRepository.findById(Id);
         if(userOptional.isPresent()){
             return userOptional.get();
         } else {
-            throw new UserNotFoundException("User was not found by use of Id");
+            throw new UserNotFoundException("UserAccount was not found by use of Id");
         }
     }
 
     @Override
-    public User newUser(User newUser) {
-        newUser.setPassword(hashString(newUser.getPassword()));
-        User insertedUser = userRepository.save(newUser);
-        return insertedUser;
+    public UserAccount newUser(UserAccount newUserAccount) {
+        if(newUserAccount.getPassword().trim().equals(""))
+            throw new BlankPasswordException("Password is Blank");
+
+        String[] hashedPasswordWithSalt = passwordService.hashPasswordWithSalt(newUserAccount.getPassword());
+
+        newUserAccount.setPasswordSalt(hashedPasswordWithSalt[0]);
+        newUserAccount.setPassword(hashedPasswordWithSalt[1]);
+        UserAccount insertedUserAccount = userRepository.save(newUserAccount);
+        return insertedUserAccount;
     }
 
     @Override
-    public User updateUser(User existingUser) {
-        User oldUser = findUserbyId(existingUser.getUserId());
+    public UserAccount updateUser(UserAccount incomingChangeAcc) {
+        UserAccount toUpdateUserAccount = findUserbyUserName(incomingChangeAcc.getUserName());
+        Long userId = toUpdateUserAccount.getUserId();
 
-        if(oldUser.getPassword() != existingUser.getPassword()) {
-            existingUser.setPassword(hashString(existingUser.getPassword()));
-        }
+        String[] hashedPasswordWithSalt = passwordService.hashPasswordWithSalt(incomingChangeAcc.getPassword());
+        incomingChangeAcc.setPassword(hashedPasswordWithSalt[0]);
+        incomingChangeAcc.setPasswordSalt(hashedPasswordWithSalt[1]);
 
-        User updatedUser = userRepository.save(existingUser);
-        return updatedUser;
+        toUpdateUserAccount = incomingChangeAcc;
+        toUpdateUserAccount.setUserId(userId);
+
+        UserAccount updatedUserAccount = userRepository.save(toUpdateUserAccount);
+        return updatedUserAccount;
     }
 
     @Override
     public boolean deleteUser(String UserName) {
-        User selectedUser = findUserbyUserName(UserName);
-        userRepository.delete(selectedUser);
+        UserAccount selectedUserAccount = findUserbyUserName(UserName);
+        userRepository.delete(selectedUserAccount);
         return true;
     }
 
     @Override
     public boolean verifyUser(String Password, String UserName) {
-        User logginUser = findUserbyUserName(UserName);
-        String hashedInputtedPassword = hashString(Password);
-        if(logginUser.getPassword() == hashedInputtedPassword) {
-            return true;
-        }
-        return false;
+        UserAccount logginUserAccount = findUserbyUserName(UserName);
+        return passwordService.verifyPassword(Password,logginUserAccount.getPassword(),logginUserAccount.getPasswordSalt());
     }
-
-    public static String hashString(String input) {
-        try {
-            // Get a MessageDigest instance for SHA-256
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-
-            // Perform the hashing
-            byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
-
-            // Convert the byte array into a hexadecimal string
-            StringBuilder hexString = new StringBuilder();
-            for (byte b : hash) {
-                String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1) hexString.append('0');
-                hexString.append(hex);
-            }
-
-            return hexString.toString();
-
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
 
 }
