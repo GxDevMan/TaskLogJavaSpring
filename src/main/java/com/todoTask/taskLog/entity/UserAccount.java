@@ -60,7 +60,12 @@ public class UserAccount {
     }
 
     public void setUserRole(String userRole) {
-        this.userRole = userRole;
+        if(userRole.equals("ADMIN")){
+            this.userRole = "ADMIN";
+        }
+        else {
+            this.userRole = "USER";
+        }
     }
 
     public String getPasswordSalt() {
@@ -70,4 +75,5 @@ public class UserAccount {
     public void setPasswordSalt(String passwordSalt) {
         this.passwordSalt = passwordSalt;
     }
+
 }

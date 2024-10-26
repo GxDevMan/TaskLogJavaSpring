@@ -44,9 +44,9 @@ public class UserServiceImpl implements UserService{
             throw new BlankPasswordException("Password is Blank");
 
         String[] hashedPasswordWithSalt = passwordService.hashPasswordWithSalt(newUserAccount.getPassword());
+        newUserAccount.setPassword(hashedPasswordWithSalt[0]);
+        newUserAccount.setPasswordSalt(hashedPasswordWithSalt[1]);
 
-        newUserAccount.setPasswordSalt(hashedPasswordWithSalt[0]);
-        newUserAccount.setPassword(hashedPasswordWithSalt[1]);
         UserAccount insertedUserAccount = userRepository.save(newUserAccount);
         return insertedUserAccount;
     }
