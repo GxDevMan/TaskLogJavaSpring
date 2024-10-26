@@ -5,10 +5,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -28,12 +26,13 @@ public class SessionSecurityConfig {
 
     private static final String[] ADMIN_AUTH = {
             "/TaskAPI/v1/UserAccount/**",
+            "/TaskAPI/v1/Task/**"
     };
 
     private static final String[] USER_AUTH = {
             "/TaskAPI/v1/UserAccount/updateUserAcc/",
+            "/TaskAPI/v1/Task/**"
     };
-
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -42,6 +41,7 @@ public class SessionSecurityConfig {
                         authorizeRequests
                                 .requestMatchers(AUTH_WHITELIST).permitAll() // Allow login and register without authentication
                                 .requestMatchers(ADMIN_AUTH).hasAuthority("ADMIN")
+                                .requestMatchers(USER_AUTH).hasAuthority("USER")
                                 .anyRequest().authenticated()
                 ).
                 sessionManagement(sessionManagement ->
