@@ -2,6 +2,7 @@ package com.todoTask.taskLog.service;
 
 import com.todoTask.taskLog.entity.UserAccount;
 import com.todoTask.taskLog.exception.BlankPasswordException;
+import com.todoTask.taskLog.exception.PasswordMismatchException;
 import com.todoTask.taskLog.exception.UserNotFoundException;
 import com.todoTask.taskLog.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,9 +76,13 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
-    public boolean verifyUser(String Password, String UserName) {
+    public UserAccount verifyUser(String Password, String UserName) {
         UserAccount logginUserAccount = findUserbyUserName(UserName);
-        return passwordService.verifyPassword(Password,logginUserAccount.getPassword(),logginUserAccount.getPasswordSalt());
+        boolean check = passwordService.verifyPassword(Password,logginUserAccount.getPassword(),logginUserAccount.getPasswordSalt());
+        if(check){
+            return logginUserAccount;
+        }
+        throw new PasswordMismatchException("Password Mismatch");
     }
 
 }

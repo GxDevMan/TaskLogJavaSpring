@@ -60,11 +60,11 @@ public class UserAccount {
     }
 
     public void setUserRole(String userRole) {
-        if(userRole.equals("ADMIN")){
-            this.userRole = "ADMIN";
+        if(userRole.toUpperCase().equals(roleEnum.ADMIN.toString())){
+            this.userRole = roleEnum.ADMIN.toString();
         }
         else {
-            this.userRole = "USER";
+            this.userRole = roleEnum.USER.toString();
         }
     }
 

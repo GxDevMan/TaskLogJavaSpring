@@ -1,14 +1,18 @@
 package com.todoTask.taskLog.entity;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.sql.Date;
+import java.time.LocalDate;
 
+@Entity
 public class TaskEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long TaskId;
 
     @ManyToOne
-    @JoinColumn(name = "user_id")
+    @JsonIgnore
+    @JoinColumn(name = "user_id", nullable = false)
     private UserAccount userAccount;
 
     @Column(columnDefinition = "TEXT",nullable = false)
@@ -23,12 +27,13 @@ public class TaskEntity {
     public TaskEntity() {
     }
 
-    public TaskEntity(Long taskId, UserAccount userAccount, String taskName, String taskDescription, Date taskDate) {
+    public TaskEntity(Long taskId, UserAccount userAccount, String taskName, String taskDescription) {
         TaskId = taskId;
         this.userAccount = userAccount;
         this.taskName = taskName;
         this.taskDescription = taskDescription;
-        this.taskDate = taskDate;
+        LocalDate currentDate = LocalDate.now();
+        this.taskDate = Date.valueOf(currentDate);
     }
 
     public Long getTaskId() {

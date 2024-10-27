@@ -1,6 +1,7 @@
 package com.todoTask.taskLog.controller;
 
 import com.todoTask.taskLog.entity.UserAccount;
+import com.todoTask.taskLog.exception.PasswordMismatchException;
 import com.todoTask.taskLog.exception.UserNotFoundException;
 import com.todoTask.taskLog.service.PasswordService;
 import com.todoTask.taskLog.service.UserService;
@@ -27,23 +28,23 @@ public class authController {
         this.userService = userService;
     }
 
-    @Operation(summary = "\"username\" is used to create the session")
+    @Operation(summary = "\"userAcc\" pojo saved when logged in")
     @PostMapping
     @RequestMapping(value = "login/", method = RequestMethod.POST)
     public ResponseEntity<?> login(@RequestBody UserAccount loginthisUser, HttpSession session, HttpServletResponse response) {
-        boolean passwordMatch = false;
+        UserAccount account;
         try {
-            passwordMatch = userService.verifyUser(loginthisUser.getPassword(), loginthisUser.getUserName());
+            account = userService.verifyUser(loginthisUser.getPassword(), loginthisUser.getUserName());
         } catch (UserNotFoundException e){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User was not found");
+        } catch (PasswordMismatchException e){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Entered password is invalid");
         }
 
-        if(passwordMatch){
-            session.setAttribute("username", loginthisUser.getUserName());
-            session.setAttribute("role", loginthisUser.getUserRole());
-            return ResponseEntity.status(HttpStatus.OK).body("Login Successful");
-        }
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Entered Password was wrong");
+        account.setPassword("");
+        account.setPasswordSalt("");
+        session.setAttribute("userAcc", account);
+        return ResponseEntity.status(HttpStatus.OK).body("Login Successful");
     }
 
     @DeleteMapping

@@ -10,6 +10,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import com.todoTask.taskLog.entity.roleEnum;
 import java.util.Arrays;
 
 @Configuration
@@ -31,6 +32,7 @@ public class SessionSecurityConfig {
 
     private static final String[] USER_AUTH = {
             "/TaskAPI/v1/UserAccount/updateUserAcc/",
+            "/TaskAPI/v1/UserAccount/userLoggedInInfo/",
             "/TaskAPI/v1/Task/**"
     };
 
@@ -40,14 +42,15 @@ public class SessionSecurityConfig {
                 .authorizeRequests(authorizeRequests ->
                         authorizeRequests
                                 .requestMatchers(AUTH_WHITELIST).permitAll() // Allow login and register without authentication
-                                .requestMatchers(ADMIN_AUTH).hasAuthority("ADMIN")
-                                .requestMatchers(USER_AUTH).hasAuthority("USER")
+                                .requestMatchers(ADMIN_AUTH).hasAuthority(roleEnum.ADMIN.toString())
+                                .requestMatchers(USER_AUTH).hasAuthority(roleEnum.USER.toString())
                                 .anyRequest().authenticated()
                 ).
                 sessionManagement(sessionManagement ->
                         sessionManagement
                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                );
+                )
+                .csrf(csrf -> csrf.disable()); //disable when in production
         return http.build();
     }
 

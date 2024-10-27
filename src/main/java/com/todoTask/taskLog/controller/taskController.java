@@ -6,6 +6,7 @@ import com.todoTask.taskLog.exception.TaskNotFoundException;
 import com.todoTask.taskLog.service.TaskService;
 import com.todoTask.taskLog.service.UserService;
 import jakarta.servlet.http.HttpSession;
+import com.todoTask.taskLog.entity.roleEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,20 +29,27 @@ public class taskController {
     }
 
     @GetMapping
-    @RequestMapping(value = "taskFindbyId/{task_id}", method = RequestMethod.GET)
-    public ResponseEntity<TaskEntity> getTaskByTaskId(@PathVariable("task_id") Long Id) {
+    @RequestMapping(value = "taskFindbyId/{task_id}/", method = RequestMethod.GET)
+    public ResponseEntity<TaskEntity> getTaskByTaskId(@PathVariable("task_id") Long Id, HttpSession session) {
         try {
-            return new ResponseEntity<TaskEntity>(taskService.findbyTaskId(Id), HttpStatus.OK);
+            UserAccount loggedInUser = (UserAccount) session.getAttribute("userAcc");
+            TaskEntity taskEntity = taskService.findbyTaskId(Id);
+
+            if(loggedInUser.getUserName().equals(taskEntity.getUserAccount().getUserName())){
+                return new ResponseEntity<TaskEntity>(taskEntity, HttpStatus.OK);
+            }
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"Unauthorized access");
+
         } catch (TaskNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found by Task Id");
         }
     }
 
     @GetMapping
-    @RequestMapping(value = "taskFindbyUserAcc/", method = RequestMethod.POST)
+    @RequestMapping(value = "taskFindbyUserAcc/", method = RequestMethod.GET)
     public ResponseEntity<List<TaskEntity>> getListofTasks(HttpSession session){
-        UserAccount account = userService.findUserbyUserName((String) session.getAttribute("username"));
-        List<TaskEntity> tasks = taskService.findtasksbyUserAccount(account);
+        UserAccount loggedInUser = (UserAccount) session.getAttribute("userAcc");
+        List<TaskEntity> tasks = taskService.findtasksbyUserAccount(loggedInUser);
         if(tasks.isEmpty()){
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } else {
@@ -53,8 +61,11 @@ public class taskController {
     @RequestMapping(value = "newTask/", method = RequestMethod.POST)
     public ResponseEntity<TaskEntity> newTask(@RequestBody TaskEntity newTask, HttpSession session) {
         try {
-            newTask.setUserAccount(userService.findUserbyUserName((String) session.getAttribute("username")));
-            return new ResponseEntity<TaskEntity>(taskService.newTask(newTask), HttpStatus.OK);
+            UserAccount loggedInUser = (UserAccount) session.getAttribute("userAcc");
+            newTask.setTaskId(null);
+            newTask.setUserAccount(loggedInUser);
+            newTask = taskService.newTask(newTask);
+            return new ResponseEntity<TaskEntity>(newTask, HttpStatus.OK);
         } catch (Exception e) {
             e.printStackTrace();
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error in saving task");
@@ -65,8 +76,19 @@ public class taskController {
     @RequestMapping(value = "updateTask/", method = RequestMethod.POST)
     public ResponseEntity<TaskEntity> updateTask(@RequestBody TaskEntity updateTask, HttpSession session) {
         try {
-            updateTask.setUserAccount(userService.findUserbyUserName((String) session.getAttribute("username")));
-            return new ResponseEntity<TaskEntity>(taskService.updateTask(updateTask), HttpStatus.OK);
+            UserAccount loggedInUser = (UserAccount) session.getAttribute("userAcc");
+            if(loggedInUser.getUserRole().equals(roleEnum.ADMIN.toString())){
+                TaskEntity updatedTask = taskService.updateTask(updateTask);
+                return new ResponseEntity<TaskEntity>(updatedTask, HttpStatus.OK);
+            }
+
+            TaskEntity dbTask = taskService.findbyTaskId(updateTask.getTaskId());
+            if(loggedInUser.getUserName().equals(dbTask.getUserAccount().getUserName())){
+                updateTask.setUserAccount(loggedInUser);
+                TaskEntity updatedTask = taskService.updateTask(updateTask);
+                return new ResponseEntity<TaskEntity>(updatedTask, HttpStatus.OK);
+            }
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"Unauthorized Access");
         } catch (Exception e) {
             e.printStackTrace();
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error in updating task");
@@ -74,9 +96,19 @@ public class taskController {
     }
 
     @DeleteMapping
-    @RequestMapping(value = "deleteTask/", method = RequestMethod.DELETE)
-    public ResponseEntity<?> deleteTask(@RequestBody TaskEntity deleteThisTask){
-        taskService.deleteTask(deleteThisTask);
-        return ResponseEntity.status(HttpStatus.OK).body("Task Deleted Successfully");
+    @RequestMapping(value = "deleteTask/{task_id}/", method = RequestMethod.DELETE)
+    public ResponseEntity<?> deleteTask(@PathVariable("task_id") Long task_id, HttpSession session){
+        UserAccount loggedInUser = (UserAccount) session.getAttribute("userAcc");
+        TaskEntity dbTask = taskService.findbyTaskId(task_id);
+        if(loggedInUser.getUserRole().equals(roleEnum.ADMIN.toString())){
+            taskService.deleteTask(dbTask);
+            return ResponseEntity.status(HttpStatus.OK).body("Task Deleted Successfully");
+        }
+
+        if(loggedInUser.getUserName().equals(dbTask.getUserAccount().getUserName())){
+            taskService.deleteTask(dbTask);
+            return ResponseEntity.status(HttpStatus.OK).body("Task Deleted Successfully");
+        }
+        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized Access");
     }
 }

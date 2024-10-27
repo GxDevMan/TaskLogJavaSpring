@@ -7,5 +7,5 @@ public interface UserService {
     UserAccount newUser(UserAccount newUserAccount);
     UserAccount updateUser(UserAccount existingUserAccount);
     boolean deleteUser(String UserName);
-    boolean verifyUser(String Password, String UserName);
+    UserAccount verifyUser(String Password, String UserName);
 }
