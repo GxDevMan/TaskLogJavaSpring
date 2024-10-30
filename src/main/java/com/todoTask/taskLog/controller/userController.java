@@ -27,7 +27,6 @@ public class userController {
     public ResponseEntity<UserAccount> getUserbyUserName(@PathVariable("user_name") String user_name) {
         try {
             UserAccount foundedUser = userService.findUserbyUserName(user_name);
-            foundedUser.setPasswordSalt(null);
             foundedUser.setPassword(null);
             return new ResponseEntity<UserAccount>(foundedUser, HttpStatus.OK);
         } catch (UserNotFoundException userNotFoundException) {
@@ -46,24 +45,29 @@ public class userController {
     @RequestMapping(value = "userLoggedInInfo/", method = RequestMethod.GET)
     public ResponseEntity<UserAccount> getLoggedInUserInfo(HttpSession session){
         UserAccount loggedInUser = (UserAccount) session.getAttribute("userAcc");
+        loggedInUser.setPassword(null);
         return new ResponseEntity<UserAccount>(loggedInUser, HttpStatus.OK);
     }
 
     @PostMapping
     @RequestMapping(value = "updateUserAcc/", method = RequestMethod.POST)
     public ResponseEntity<UserAccount> updateExistingUser(
-            @RequestBody UserAccount existingUserAccount,
+            @RequestBody UserAccount accountToBeUpdated,
             HttpSession session) {
 
         UserAccount loggedInUser = (UserAccount) session.getAttribute("userAcc");
         if (loggedInUser.getUserRole().equals(roleEnum.ADMIN.toString())) {
-            return new ResponseEntity<UserAccount>(userService.updateUser(existingUserAccount), HttpStatus.OK);
+            if(accountToBeUpdated.getUserName().equals(loggedInUser.getUserName())){
+                UserAccount updateUserAccount = userService.updateLoggedInUser(accountToBeUpdated,loggedInUser);
+                session.setAttribute("userAcc", updateUserAccount);
+                return new ResponseEntity<>(updateUserAccount, HttpStatus.OK);
+            }
+            return new ResponseEntity<UserAccount>(userService.updateUser(accountToBeUpdated), HttpStatus.OK);
         }
 
-        existingUserAccount.setUserId(loggedInUser.getUserId());
-        loggedInUser = userService.updateUser(existingUserAccount);
-        session.setAttribute("userAcc", loggedInUser);
-        return new ResponseEntity<UserAccount>(userService.updateUser(loggedInUser), HttpStatus.OK);
+        UserAccount updateUserAccount = userService.updateLoggedInUser(accountToBeUpdated,loggedInUser);
+        session.setAttribute("userAcc", updateUserAccount);
+        return new ResponseEntity<UserAccount>(userService.updateUser(updateUserAccount), HttpStatus.OK);
     }
 
     @DeleteMapping
@@ -75,7 +79,7 @@ public class userController {
             if(loggedInUser.getUserName().equals(user_name)){
                 userService.deleteUser(user_name);
                 session.invalidate();
-                return ResponseEntity.status(HttpStatus.OK).body("you have delete your own account");
+                return ResponseEntity.status(HttpStatus.OK).body("you have deleted your own account");
             }
 
             if(loggedInUser.getUserRole().equals(roleEnum.ADMIN.toString())){

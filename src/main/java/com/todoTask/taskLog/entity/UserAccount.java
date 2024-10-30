@@ -14,9 +14,6 @@ public class UserAccount {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String Password;
 
-    @Column(columnDefinition = "TEXT", nullable = false)
-    private String passwordSalt;
-
     @Column(nullable = false)
     private String userRole;
 
@@ -60,20 +57,12 @@ public class UserAccount {
     }
 
     public void setUserRole(String userRole) {
-        if(userRole.toUpperCase().equals(roleEnum.ADMIN.toString())){
-            this.userRole = roleEnum.ADMIN.toString();
+        if(userRole.toUpperCase().equals(roleEnum.ADMIN.name())){
+            this.userRole = roleEnum.ADMIN.name();
         }
         else {
-            this.userRole = roleEnum.USER.toString();
+            this.userRole = roleEnum.USERACC.name();
         }
-    }
-
-    public String getPasswordSalt() {
-        return passwordSalt;
-    }
-
-    public void setPasswordSalt(String passwordSalt) {
-        this.passwordSalt = passwordSalt;
     }
 
 }

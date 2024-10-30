@@ -6,23 +6,25 @@ import com.todoTask.taskLog.exception.PasswordMismatchException;
 import com.todoTask.taskLog.exception.UserNotFoundException;
 import com.todoTask.taskLog.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
+
 import java.util.Optional;
 
 @Service
-public class UserServiceImpl implements UserService{
+public class UserServiceImpl implements UserService {
 
-   @Autowired
-   private UserRepository userRepository;
+    @Autowired
+    private UserRepository userRepository;
 
-   @Autowired
-   private PasswordService passwordService;
+    @Autowired
+    private PasswordService passwordService;
 
     @Override
     public UserAccount findUserbyUserName(String userName) {
         Optional<UserAccount> userOptional = Optional.ofNullable(userRepository.findByuserName(userName));
 
-        if(userOptional.isPresent()){
+        if (userOptional.isPresent()) {
             return userOptional.get();
         } else {
             throw new UserNotFoundException("UserAccount was not found by use of UserAccount Name");
@@ -32,7 +34,7 @@ public class UserServiceImpl implements UserService{
     @Override
     public UserAccount findUserbyId(Long Id) {
         Optional<UserAccount> userOptional = userRepository.findById(Id);
-        if(userOptional.isPresent()){
+        if (userOptional.isPresent()) {
             return userOptional.get();
         } else {
             throw new UserNotFoundException("UserAccount was not found by use of Id");
@@ -41,12 +43,11 @@ public class UserServiceImpl implements UserService{
 
     @Override
     public UserAccount newUser(UserAccount newUserAccount) {
-        if(newUserAccount.getPassword().trim().equals(""))
+        if (newUserAccount.getPassword().trim().equals(""))
             throw new BlankPasswordException("Password is Blank");
 
-        String[] hashedPasswordWithSalt = passwordService.hashPasswordWithSalt(newUserAccount.getPassword());
-        newUserAccount.setPassword(hashedPasswordWithSalt[0]);
-        newUserAccount.setPasswordSalt(hashedPasswordWithSalt[1]);
+        String hashedPasswordWithSalt = passwordService.encode(newUserAccount.getPassword());
+        newUserAccount.setPassword(hashedPasswordWithSalt);
 
         UserAccount insertedUserAccount = userRepository.save(newUserAccount);
         return insertedUserAccount;
@@ -57,14 +58,23 @@ public class UserServiceImpl implements UserService{
         UserAccount toUpdateUserAccount = findUserbyUserName(incomingChangeAcc.getUserName());
         Long userId = toUpdateUserAccount.getUserId();
 
-        String[] hashedPasswordWithSalt = passwordService.hashPasswordWithSalt(incomingChangeAcc.getPassword());
-        incomingChangeAcc.setPassword(hashedPasswordWithSalt[0]);
-        incomingChangeAcc.setPasswordSalt(hashedPasswordWithSalt[1]);
+        String hashedPasswordWithSalt = passwordService.encode(incomingChangeAcc.getPassword());
+        incomingChangeAcc.setPassword(hashedPasswordWithSalt);
 
         toUpdateUserAccount = incomingChangeAcc;
         toUpdateUserAccount.setUserId(userId);
 
         UserAccount updatedUserAccount = userRepository.save(toUpdateUserAccount);
+        return updatedUserAccount;
+    }
+
+    @Override
+    public UserAccount updateLoggedInUser(UserAccount incomingChange, UserAccount loggedInUser) {
+        loggedInUser.setUserName(incomingChange.getUserName());
+        loggedInUser.setUserRole(incomingChange.getUserRole());
+        loggedInUser.setPassword(passwordService.encode(incomingChange.getPassword()));
+        loggedInUser.setUserId(loggedInUser.getUserId());
+        UserAccount updatedUserAccount = userRepository.save(loggedInUser);
         return updatedUserAccount;
     }
 
@@ -78,8 +88,8 @@ public class UserServiceImpl implements UserService{
     @Override
     public UserAccount verifyUser(String Password, String UserName) {
         UserAccount logginUserAccount = findUserbyUserName(UserName);
-        boolean check = passwordService.verifyPassword(Password,logginUserAccount.getPassword(),logginUserAccount.getPasswordSalt());
-        if(check){
+        boolean check = passwordService.matches(Password, logginUserAccount.getPassword());
+        if (check) {
             return logginUserAccount;
         }
         throw new PasswordMismatchException("Password Mismatch");

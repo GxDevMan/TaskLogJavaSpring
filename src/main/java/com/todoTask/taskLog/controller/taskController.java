@@ -35,7 +35,11 @@ public class taskController {
             UserAccount loggedInUser = (UserAccount) session.getAttribute("userAcc");
             TaskEntity taskEntity = taskService.findbyTaskId(Id);
 
+
             if(loggedInUser.getUserName().equals(taskEntity.getUserAccount().getUserName())){
+                return new ResponseEntity<TaskEntity>(taskEntity, HttpStatus.OK);
+            }
+            else if (loggedInUser.getUserRole().equals(roleEnum.ADMIN.toString())){
                 return new ResponseEntity<TaskEntity>(taskEntity, HttpStatus.OK);
             }
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"Unauthorized access");

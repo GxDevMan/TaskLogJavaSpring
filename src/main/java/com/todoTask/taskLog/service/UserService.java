@@ -6,6 +6,7 @@ public interface UserService {
     UserAccount findUserbyId(Long Id);
     UserAccount newUser(UserAccount newUserAccount);
     UserAccount updateUser(UserAccount existingUserAccount);
+    UserAccount updateLoggedInUser(UserAccount incomingChange, UserAccount loggedInUser);
     boolean deleteUser(String UserName);
     UserAccount verifyUser(String Password, String UserName);
 }
