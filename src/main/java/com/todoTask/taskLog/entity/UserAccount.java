@@ -1,5 +1,8 @@
 package com.todoTask.taskLog.entity;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+
+import java.util.List;
 
 @Entity
 public class UserAccount {
@@ -16,6 +19,10 @@ public class UserAccount {
 
     @Column(nullable = false)
     private String userRole;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "userAccount", cascade = CascadeType.REMOVE)
+    private List<TaskEntity> accountTasks;
 
 
     public UserAccount(){
@@ -65,4 +72,11 @@ public class UserAccount {
         }
     }
 
+    public List<TaskEntity> getAccountTasks() {
+        return accountTasks;
+    }
+
+    public void setAccountTasks(List<TaskEntity> accountTasks) {
+        this.accountTasks = accountTasks;
+    }
 }

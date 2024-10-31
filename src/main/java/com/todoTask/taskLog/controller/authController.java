@@ -5,6 +5,7 @@ import com.todoTask.taskLog.entity.UserAccount;
 import com.todoTask.taskLog.exception.PasswordMismatchException;
 import com.todoTask.taskLog.exception.UserNotFoundException;
 import com.todoTask.taskLog.service.PasswordService;
+import com.todoTask.taskLog.service.SessionObjectMapperService;
 import com.todoTask.taskLog.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.Cookie;
@@ -18,6 +19,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.Optional;
 
 
 @Profile({"development","deploy"})
@@ -31,11 +35,14 @@ public class authController {
 
     private final PasswordService passwordService;
     private final UserService userService;
+    private final SessionObjectMapperService sessionMapperService;
 
     @Autowired
-    public authController(PasswordService passwordService, UserService userService) {
+    public authController(PasswordService passwordService, UserService userService, SessionObjectMapperService sessionMapperService) {
         this.passwordService = passwordService;
         this.userService = userService;
+        this.sessionMapperService = sessionMapperService;
+
     }
 
     @Operation(summary = "\"userAcc\" pojo saved when logged in")
@@ -45,18 +52,25 @@ public class authController {
         UserAccount account;
         try {
             account = userService.verifyUser(loginthisUser.getPassword(), loginthisUser.getUserName());
+            Optional<byte[]> byteAccOpt = sessionMapperService.accountObjtoByte(account);
+            UserAccountDetails userAccountDetails = new UserAccountDetails(account);
+
+            if(byteAccOpt.isPresent()) {
+                session.setAttribute("userAcc", byteAccOpt.get());
+
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(byteAccOpt.get(), userAccountDetails.getPassword(), userAccountDetails.getAuthorities());
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+                session.setAttribute("SPRING_SECURITY_CONTEXT", SecurityContextHolder.getContext());
+            }
+            else{
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"Error converting Account OBJ to bytes");
+            }
         } catch (UserNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User was not found");
         } catch (PasswordMismatchException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Entered password is invalid");
         }
-        session.setAttribute("userAcc", account);
-
-        UserAccountDetails userAccountDetails = new UserAccountDetails(account);
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(userAccountDetails, userAccountDetails.getPassword(), userAccountDetails.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        session.setAttribute("SPRING_SECURITY_CONTEXT", SecurityContextHolder.getContext());
         return ResponseEntity.status(HttpStatus.OK).body("Login Successful");
     }
 
