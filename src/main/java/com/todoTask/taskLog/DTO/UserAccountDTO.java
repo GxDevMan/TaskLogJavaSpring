@@ -11,6 +11,10 @@ public class UserAccountDTO {
         this.userRole = userRole;
     }
 
+    public UserAccountDTO(){
+
+    }
+
     public Long getUserId() {
         return userId;
     }

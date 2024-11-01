@@ -1,7 +1,8 @@
 package com.todoTask.taskLog.controller;
 
 import com.todoTask.taskLog.DTO.UserAccountDTO;
-import com.todoTask.taskLog.DTO.UserAccountMapperService;
+import com.todoTask.taskLog.DTO.UserAccountDTOFactory;
+import com.todoTask.taskLog.DTO.UserAccountMapperServiceImpl;
 import com.todoTask.taskLog.entity.UserAccount;
 import com.todoTask.taskLog.exception.UserNotFoundException;
 import com.todoTask.taskLog.service.SessionObjectMapperService;
@@ -23,15 +24,15 @@ public class userController {
 
     private final UserService userService;
     private final SessionObjectMapperService sessionObjectMapperService;
-    private final UserAccountMapperService userAccountMapperService;
+    private final UserAccountDTOFactory userAccountFactory;
 
     @Autowired
     public userController(UserService userService,
                           SessionObjectMapperService sessionObjectMapperService,
-                          UserAccountMapperService userAccountMapperService) {
+                          UserAccountMapperServiceImpl userAccountMapperService) {
         this.sessionObjectMapperService = sessionObjectMapperService;
         this.userService = userService;
-        this.userAccountMapperService = userAccountMapperService;
+        this.userAccountFactory = userAccountMapperService;
     }
 
     @GetMapping
@@ -39,8 +40,8 @@ public class userController {
     public ResponseEntity<UserAccountDTO> getUserbyUserName(@PathVariable("user_name") String user_name) {
         try {
             UserAccount foundedUser = userService.findUserbyUserName(user_name);
-            UserAccountDTO userfoundedDTO = userAccountMapperService.toUserDTO(foundedUser);
-            return new ResponseEntity<UserAccountDTO>(userfoundedDTO, HttpStatus.OK);
+            UserAccountDTO foundedDTO = userAccountFactory.returnUserProfile(foundedUser);
+            return new ResponseEntity<UserAccountDTO>(foundedDTO, HttpStatus.OK);
         } catch (UserNotFoundException userNotFoundException) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "UserAccount was not found");
         }
