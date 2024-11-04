@@ -34,8 +34,8 @@ public class SessionSecurityConfig {
     };
 
        private static final String[] ADMIN_AUTH = {
-            "TaskAPI/v1/UserAccount/newUserAcc/",
-            "TaskAPI/v1/UserAccount/userNameFindAcc/**"
+            "/TaskAPI/v1/UserAccount/newUserAcc/",
+            "/TaskAPI/v1/UserAccount/userNameFindAcc/**"
     };
 
 

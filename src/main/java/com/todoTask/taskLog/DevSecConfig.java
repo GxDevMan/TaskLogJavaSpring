@@ -7,7 +7,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
-@Profile("disablesecurity")
+@Profile({"disablesecurity","testing"})
 public class DevSecConfig {
 
     @Bean

@@ -1,5 +1,6 @@
 package com.todoTask.taskLog.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
 import java.util.List;
@@ -7,16 +8,20 @@ import java.util.List;
 @Entity
 public class UserAccount {
 
+    @JsonProperty("userId")
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long userId;
 
+    @JsonProperty("userName")
     @Column(unique = true, nullable = false)
     private String userName;
 
+    @JsonProperty("password")
     @Column(columnDefinition = "TEXT", nullable = false)
     private String Password;
 
+    @JsonProperty("userRole")
     @Column(nullable = false)
     private String userRole;
 
